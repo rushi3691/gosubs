@@ -1,0 +1,6 @@
+.env
+*.mp4
+
+
+# golang related
+go.sum
