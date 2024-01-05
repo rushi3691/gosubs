@@ -80,6 +80,10 @@ func (s *SpeechRecognizer) Recognize(data []byte) (string, error) {
 		log.Println(string(body))
 		lines := bytes.Split(body, []byte("\n"))
 		for _, line := range lines {
+			if len(line) == 0 {
+				continue
+			}
+
 			var result SpeechRecognitionResult
 			err := json.Unmarshal(line, &result)
 			if err != nil {
