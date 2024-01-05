@@ -8,8 +8,8 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/rushi3691/go_subtitle_generator/f"
-	"github.com/rushi3691/go_subtitle_generator/u"
+	"github.com/rushi3691/go_subtitle_generator/services"
+	"github.com/rushi3691/go_subtitle_generator/utils"
 	"golang.org/x/text/language"
 )
 
@@ -31,25 +31,25 @@ func GenerateSubtitles(
 	subtitleFileFormat string,
 	apiKey string,
 ) (string, error) {
-	audioFilename, audioRate, err := u.ExtractAudio(sourcePath, u.DefaultChannels, u.DefaultRate)
+	audioFilename, audioRate, err := utils.ExtractAudio(sourcePath, utils.DefaultChannels, utils.DefaultRate)
 	if err != nil {
 		return "", err
 	}
 	defer os.Remove(audioFilename)
 
-	regions, err := u.FindSpeechRegions(audioFilename, u.DefaultFrameWidth, u.DefaultMinRegionSize, u.DefaultMaxRegionSize)
+	regions, err := utils.FindSpeechRegions(audioFilename, utils.DefaultFrameWidth, utils.DefaultMinRegionSize, utils.DefaultMaxRegionSize)
 	if err != nil {
 		return "", err
 	}
 
-	converter := f.NewFLACConverter(audioFilename, f.DefaultIncludeAfter, f.DefaultIncludeBefore)
+	converter := services.NewFLACConverter(audioFilename, services.DefaultIncludeAfter, services.DefaultIncludeBefore)
 	// fmt.Println(converter)
-	recognizer := f.NewSpeechRecognizer(srcLanguage, audioRate, f.DefaultRetries, apiKey)
+	recognizer := services.NewSpeechRecognizer(srcLanguage, audioRate, services.DefaultRetries, apiKey)
 	// fmt.Println(recognizer)
 
 	var wg sync.WaitGroup
-	subtitles := make([]u.Subtitle, len(regions))
-	regionsChan := make(chan u.RegionWithIndex)
+	subtitles := make([]utils.Subtitle, len(regions))
+	regionsChan := make(chan utils.RegionWithIndex)
 
 	// Start 3 worker goroutines
 	log.Println("Starting", concurrency, "workers")
@@ -71,14 +71,14 @@ func GenerateSubtitles(
 					return
 				}
 
-				subtitles[region.Index] = u.Subtitle{Region: region.Region, Transcript: transcript}
+				subtitles[region.Index] = utils.Subtitle{Region: region.Region, Transcript: transcript}
 			}
 		}(i)
 	}
 
 	// Send regions to be processed
 	for i, region := range regions {
-		regionsChan <- u.RegionWithIndex{Region: region, Index: i}
+		regionsChan <- utils.RegionWithIndex{Region: region, Index: i}
 	}
 	close(regionsChan)
 
@@ -89,7 +89,7 @@ func GenerateSubtitles(
 	// log.Println(srcLanguage, dstLanguage)
 	if srcLanguage != dstLanguage {
 		if apiKey != "" {
-			translator, err := f.NewTranslator(dstLanguage, apiKey, DefaultSrcLanguage, DefaultDstLanguage)
+			translator, err := services.NewTranslator(dstLanguage, apiKey, DefaultSrcLanguage, DefaultDstLanguage)
 			if err != nil {
 				return "", err
 			}
@@ -116,7 +116,7 @@ func GenerateSubtitles(
 	}
 	log.Println(dest)
 
-	err = u.SrtFormatter(subtitles, u.DefaultPaddingBefore, u.DefaultPaddingAfter, dest)
+	err = utils.SrtFormatter(subtitles, utils.DefaultPaddingBefore, utils.DefaultPaddingAfter, dest)
 	if err != nil {
 		return "", err
 	}
