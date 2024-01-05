@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 
 	"github.com/rushi3691/go_subtitle_generator/f"
 	"github.com/rushi3691/go_subtitle_generator/u"
@@ -13,10 +14,7 @@ import (
 )
 
 const (
-	DefaultConcurrency    = 1
 	DefaultSubtitleFormat = "srt"
-	// GoogleSpeechAPIKey    = "YOUR_GOOGLE_SPEECH_API_KEY"
-	// GoogleTranslateAPIKey = "YOUR_GOOGLE_TRANSLATE_API_KEY"
 )
 
 var (
@@ -49,24 +47,45 @@ func GenerateSubtitles(
 	recognizer := f.NewSpeechRecognizer(srcLanguage, audioRate, f.DefaultRetries, apiKey)
 	// fmt.Println(recognizer)
 
-	var subtitles []u.Subtitle
-	for _, region := range regions {
-		flacFile, err := converter.Convert(region)
-		if err != nil {
-			log.Println(err)
-			return "", err
-		}
+	var wg sync.WaitGroup
+	subtitles := make([]u.Subtitle, len(regions))
+	regionsChan := make(chan u.RegionWithIndex)
 
-		transcript, err := recognizer.Recognize(flacFile)
-		if err != nil {
-			log.Println(err)
-			return "", err
-		}
+	// Start 3 worker goroutines
+	log.Println("Starting", concurrency, "workers")
+	for i := 0; i < concurrency; i++ {
+		wg.Add(1)
+		go func(i int) {
+			defer wg.Done()
+			for region := range regionsChan {
+				log.Println("Processing region", region.Index, "in worker", i)
+				flacFile, err := converter.Convert(region.Region)
+				if err != nil {
+					log.Println(err)
+					return
+				}
 
-		subtitles = append(subtitles, u.Subtitle{Region: region, Transcript: transcript})
+				transcript, err := recognizer.Recognize(flacFile)
+				if err != nil {
+					log.Println(err)
+					return
+				}
+
+				subtitles[region.Index] = u.Subtitle{Region: region.Region, Transcript: transcript}
+			}
+		}(i)
 	}
-	log.Println(subtitles)
 
+	// Send regions to be processed
+	for i, region := range regions {
+		regionsChan <- u.RegionWithIndex{Region: region, Index: i}
+	}
+	close(regionsChan)
+
+	// Wait for workers to finish
+	wg.Wait()
+
+	// Translate subtitles if necessary
 	log.Println(srcLanguage, dstLanguage)
 	if srcLanguage != dstLanguage {
 		if apiKey != "" {

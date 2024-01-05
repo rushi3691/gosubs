@@ -1,6 +1,9 @@
 .env
+
+# other
 *.mp4
 *.srt
+resume
 
 
 # golang related
