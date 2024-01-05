@@ -1,0 +1,2 @@
+Optimized: 1m 34s (94s), Unoptimized: 14m 7s (847s)
+Speedup: 9.01x, Improvement: 88.9%
