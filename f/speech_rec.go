@@ -63,7 +63,6 @@ func (s *SpeechRecognizer) Recognize(data []byte) (string, error) {
 		headers := map[string]string{
 			"Content-Type": fmt.Sprintf("audio/x-flac; rate=%d", s.Rate),
 		}
-		// log.Println(url)
 
 		resp, err := makeHttpPost(url, headers, data)
 		if err != nil {
@@ -77,7 +76,7 @@ func (s *SpeechRecognizer) Recognize(data []byte) (string, error) {
 			log.Println(err)
 			continue
 		}
-		log.Println(string(body))
+		// log.Println(string(body))
 		lines := bytes.Split(body, []byte("\n"))
 		for _, line := range lines {
 			if len(line) == 0 {
@@ -93,7 +92,7 @@ func (s *SpeechRecognizer) Recognize(data []byte) (string, error) {
 			if len(result.Result) > 0 && len(result.Result[0].Alternative) > 0 {
 				transcript := result.Result[0].Alternative[0].Transcript
 				mod := strings.ToUpper(transcript[:1]) + transcript[1:]
-				log.Println(mod)
+				// log.Println(mod)
 				return mod, nil
 			}
 		}

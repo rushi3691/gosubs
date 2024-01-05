@@ -58,7 +58,7 @@ func GenerateSubtitles(
 		go func(i int) {
 			defer wg.Done()
 			for region := range regionsChan {
-				log.Println("Processing region", region.Index, "in worker", i)
+				// log.Println("Processing region", region.Index, "in worker", i)
 				flacFile, err := converter.Convert(region.Region)
 				if err != nil {
 					log.Println(err)
@@ -86,7 +86,7 @@ func GenerateSubtitles(
 	wg.Wait()
 
 	// Translate subtitles if necessary
-	log.Println(srcLanguage, dstLanguage)
+	// log.Println(srcLanguage, dstLanguage)
 	if srcLanguage != dstLanguage {
 		if apiKey != "" {
 			translator, err := f.NewTranslator(dstLanguage, apiKey, DefaultSrcLanguage, DefaultDstLanguage)

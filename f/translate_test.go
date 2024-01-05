@@ -24,7 +24,7 @@ func TestTranslate(t *testing.T) {
 	}
 
 	translated, err := translator.Translate("Hello, world!")
-	log.Println(translated)
+	// log.Println(translated)
 	if err != nil {
 		log.Fatalf("Failed to translate text: %v", err)
 	}

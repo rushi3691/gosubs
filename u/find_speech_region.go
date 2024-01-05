@@ -1,7 +1,7 @@
 package u
 
 import (
-	"fmt"
+	"log"
 	"math"
 	"os"
 
@@ -19,23 +19,25 @@ const (
 func FindSpeechRegions(filename string, frameWidth int, minRegionSize float64, maxRegionSize float64) ([][2]float64, error) {
 	f, err := os.Open(filename)
 	if err != nil {
+		log.Println(err)
 		return nil, err
 	}
 
 	streamer, format, err := wav.Decode(f)
 	if err != nil {
+		log.Println(err)
 		return nil, err
 	}
 	defer streamer.Close()
 
 	sampleRate := format.SampleRate
 	chunkDuration := float64(frameWidth) / float64(sampleRate)
-	sampleWidth := format.Width()
-	channels := format.NumChannels
-	fmt.Println("chunkDuration", chunkDuration)
-	fmt.Println("sampleRate", sampleRate)
-	fmt.Println("sampleWidth", sampleWidth)
-	fmt.Println("channels", channels)
+	// sampleWidth := format.Width()
+	// channels := format.NumChannels
+	// fmt.Println("chunkDuration", chunkDuration)
+	// fmt.Println("sampleRate", sampleRate)
+	// fmt.Println("sampleWidth", sampleWidth)
+	// fmt.Println("channels", channels)
 
 	energies := []float64{}
 
@@ -50,7 +52,7 @@ func FindSpeechRegions(filename string, frameWidth int, minRegionSize float64, m
 	}
 
 	// fmt.Println("energies", energies)
-	fmt.Println("len(energies)", len(energies))
+	// fmt.Println("len(energies)", len(energies))
 
 	threshold, _ := stats.Percentile(energies, 20)
 
@@ -76,7 +78,7 @@ func FindSpeechRegions(filename string, frameWidth int, minRegionSize float64, m
 	}
 	// return regions
 	// fmt.Println(regions)
-	fmt.Println("len(regions)", len(regions))
+	// fmt.Println("len(regions)", len(regions))
 	return regions, nil
 }
 

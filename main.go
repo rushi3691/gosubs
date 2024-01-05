@@ -2,7 +2,6 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"log"
 	"os"
 	"runtime"
@@ -35,7 +34,7 @@ func main() {
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
 	err := godotenv.Load()
 	if err != nil {
-		fmt.Println("Error loading .env file:", err)
+		log.Println("Error loading .env file:", err)
 	}
 
 	flag.Parse()
@@ -44,10 +43,10 @@ func main() {
 
 	subtitleFilePath, err := GenerateSubtitles(*sourcePath, *output, *concurrency, *srcLanguage, *dstLanguage, *format, apiKey)
 	if err != nil {
-		fmt.Println("Error generating subtitles:", err)
+		log.Println("Error generating subtitles:", err)
 		os.Exit(1)
 	}
 
-	fmt.Println("Subtitles file created at", subtitleFilePath)
+	log.Println("Subtitles file created at", subtitleFilePath)
 	os.Exit(0)
 }
